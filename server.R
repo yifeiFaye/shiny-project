@@ -46,15 +46,15 @@ shinyServer(function(input, output) {
     # loop through each variable in checkup.varlist to grab duplicate recard
     for (m in 1:length(checkdup.varlist)){ 
       # grab duplicate record based on current checkup.varlist variable
-      dup.var <- as.data.frame(count(db, vars = checkdup.varlist[m]))
-      dup.var <- dup.var[dup.var$freq>1,]
+      dup.var <- as.data.frame(table(db[[checkdup.varlist[m]]]))
+      dup.var <- dup.var[dup.var$Freq>1,]
       # if the duplicate record list is not empty
       if(nrow(dup.var) != 0){
         # loop through all duplicated record
         for (i in 1 : nrow(dup.var)){
           # dup is a temperary list to put duplicated ppl, grab everyone who has same
           # duplicated variable record
-          dup<- db[which(db[checkdup.varlist[m]] == dup.var[i,1]), ] 
+          dup<- db[which(db[[checkdup.varlist[m]]] == dup.var[i,1]), ] 
           # add in some function here to delete duplicate case
           for (n in 1 : length(delete.crit)){
             max.var<- max((dup[delete.crit[n]]))
@@ -71,9 +71,9 @@ shinyServer(function(input, output) {
     duplicate<- NULL
     for (i in 1:nrow(db)){
       if (db$user_id[i] %in% del$user_id){
-        duplicate[i] = T
+        duplicate[i] = TRUE
       } else {
-        duplicate[i] = F
+        duplicate[i] = FALSE
       }
     }
     
@@ -175,7 +175,8 @@ shinyServer(function(input, output) {
     mutate(step4_payapp.time = as.numeric(difftime(user_pay_app_time, user_timestamp_4, units = "days"))) %>%
     mutate(payapp_ad.time = as.numeric(difftime(user_ad_time, user_pay_app_time, units = "days"))) %>%
     mutate(ad_payconfirm.time = as.numeric(difftime(user_pay_confirm_time, user_ad_time, units = "days"))) %>%
-    mutate(ad = as.factor(ifelse(user_ad_status>=3,1,0)))
+    mutate(ad = as.factor(ifelse(user_ad_status>=3,1,0))) %>%
+    mutate(age = as.numeric(year(Sys.Date())) - as.numeric(year(birthday))) 
   
   clean <- clean.duplicate.record(db, clean.dup.list1, clean.dup.list2)[[1]]
   ds <- reactive({
@@ -206,7 +207,7 @@ shinyServer(function(input, output) {
   #################################### Output ######################################
   #1, chart for demo variables
   output$demoplot <- renderPlotly({
-    plot_ly(dl1(), values = ~value, type = 'pie', textposition = 'outside', textinfo = 'label+percent',
+    plot_ly(dl1(), labels = ~dl1()[[input$demo]], values = ~value, type = 'pie', textinfo = 'label+percent',
             marker = list(color = brewer.pal(2, 'Set2')))%>%
       layout(title = 'Demographic Information',
              xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
@@ -218,8 +219,8 @@ shinyServer(function(input, output) {
     plot_ly(dl2(), x= ~channel, y=~value, type = 'bar', textposition = 'outside',
             marker = list(color = brewer.pal(6, 'Paired'))) %>%
       layout(title = 'Number of Application by Promotion Channel',
-             xaxis = list(title = 'promotion channel', showgrid = FALSE), 
-             yaxis = list(title = 'number of applicant', showgrid = FALSE))
+             xaxis = list(title = 'promotion channel', showgrid = TRUE), 
+             yaxis = list(title = 'number of applicant', showgrid = TRUE))
   })
   
   #3, chart for application process variables activity time,
@@ -227,16 +228,15 @@ shinyServer(function(input, output) {
     data <- generatesummary(dl3(), 'hour')   
     plot_ly(data, x=~hour, y=~value, type = 'scatter', mode = 'lines') %>%
       layout(title = 'User Activity by Time',
-             xaxis = list(title = 'Hour', showgrid = FALSE),
-             yaxis = list(title = 'Active User Count', showgrid = FALSE))
+             xaxis = list(title = 'Hour', showgrid = TRUE),
+             yaxis = list(title = 'Active User Count', showgrid = TRUE))
   })
   
   #4, plot the trend for new user count
   output$new.user <- renderPlotly({
     plot_ly(dl4(), x= ~user_insertedtime, y= ~value, type = 'bar', textposition = 'outside') %>%
       layout(title = 'Daily New Applicant Number',
-             xaxis = list(title = 'Date', showgrid = FALSE),
-             yaxis = list(title = 'New Applicant Number', showgrid = FALSE))
+             yaxis = list(title = 'New Applicant Number', showgrid = TRUE))
   })
   
   #5, step time
@@ -244,7 +244,7 @@ shinyServer(function(input, output) {
     plot_ly(dl5(), x = ~variable, y = ~value, color = ~ad, type = 'box')%>%
       layout(boxmode = 'group',
              title = "Time Spent per Application Step",
-             yaxis = list(title = 'days spent', showgrid = FALSE))
+             yaxis = list(title = 'days spent', showgrid = TRUE))
   })
   
   #6, campus preference,
@@ -253,8 +253,8 @@ shinyServer(function(input, output) {
     plot_ly(campus, x=~campus, y=~value, type = 'bar', textposition = 'outside',
             marker = list(color = brewer.pal(6, 'Paired'))) %>%
       layout(title = 'Campus Preference',
-             xaxis = list(title = 'campus', showgrid = FALSE), 
-             yaxis = list(title = 'number of applicant', showgrid = FALSE))
+             xaxis = list(title = 'campus', showgrid = TRUE), 
+             yaxis = list(title = 'number of applicant', showgrid = TRUE))
   })
   
   #7, payment platform,
@@ -263,16 +263,15 @@ shinyServer(function(input, output) {
     plot_ly(payment, x = ~platform, y = ~value, type = 'bar', textposition = 'outside',
             marker = list(color = brewer.pal(11, 'Spectral'))) %>%
       layout(title = 'Payment Platform Summary',
-             xaxis = list(title = 'platform', showgrid = FALSE),
-             yaxis = list(title = 'payment count', showgrid = FALSE))
+             yaxis = list(title = 'payment count', showgrid = TRUE))
   })
   
   #8, essay admission decision
   output$essay <- renderPlotly({
-    plot_ly(dl8(), x = ~variable, y = ~value, color = ~ad, type = 'box')%>%
+    plot_ly(dl8(), x = ~variable, y = ~value, color = ~ad, type = 'box', hoverinfo = 'x+y')%>%
       layout(boxmode = 'group',
              title = "Essay Word Number by Admission Result",
-             yaxis = list(title = 'Number of word', showgrid = FALSE))
+             yaxis = list(title = 'Number of word', showgrid = TRUE))
   })
   
   #9, hour activity admission decision
@@ -280,7 +279,7 @@ shinyServer(function(input, output) {
     plot_ly(dl9(), x = ~variable, y = ~value, color = ~ad, type = 'box')%>%
       layout(boxmode = 'group',
              title = "Activity and Honor Number by Admission Result",
-             yaxis = list(title = 'Number of Activity/Honor', showgrid = FALSE))
+             yaxis = list(title = 'Number of Activity/Honor', showgrid = TRUE))
   })
   
   output$material.summary <- renderTable({
