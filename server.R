@@ -18,8 +18,9 @@ shinyServer(function(input, output) {
   library(scales)
   library(plotly)
   library(RColorBrewer)
-  wd <- setwd("C:/Users/yifei.liu/Documents/hsylc")
-  db <- readxl::read_excel("hsylc raw data.xlsx", 1, col_names = T)
+  library(readxl)
+  wd <- setwd("/Users/yifeiliu/Desktop/shiny-project")
+  db <- readxl::read_excel("application data.xlsx", 1, col_names = T)
   
   ############################## function ##########################################
   generatesummary <- function(db, grp.var){

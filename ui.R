@@ -14,7 +14,7 @@ library(shinydashboard)
 library(shiny)
 dashboardPage(
   # Application title
-  dashboardHeader(title = "HSYLC Applicatoin Data Dashboard"),
+  dashboardHeader(title = "Program Applicatoin Data Dashboard"),
   
   # Sidebar with a slider input for number of bins 
   dashboardSidebar(
