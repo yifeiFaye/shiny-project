@@ -19,7 +19,7 @@ shinyServer(function(input, output) {
   library(plotly)
   library(RColorBrewer)
   library(readxl)
-  wd <- setwd("/Users/yifeiliu/Desktop/shiny-project")
+  
   db <- readxl::read_excel("application data.xlsx", 1, col_names = T)
   
   ############################## function ##########################################
