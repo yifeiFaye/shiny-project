@@ -1,4 +1,4 @@
 # Shiny Project
-HSYLC Application Data Visualization Shiny Dashboard
+Program Application Data Visualization Shiny Dashboard
 
-Next Improvement should be UI layout and create button to upload or download file. 
+This is a simple shiny dashboard that visualize the key metrics that describe applicant's application journey. 
